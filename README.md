@@ -1,4 +1,4 @@
-# TripMate AI
+# TravelMate
 
 FastAPI travel planner using Gemini, Tavily, and AviationStack.
 

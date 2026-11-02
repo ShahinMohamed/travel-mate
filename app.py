@@ -25,10 +25,10 @@ if not SESSION_SECRET:
         raise RuntimeError("Server session configuration is missing")
     SESSION_SECRET = secrets.token_urlsafe(48)
 
-app = FastAPI(title="TripMate AI", version="1.0.0", docs_url=None,
+app = FastAPI(title="TravelMate", version="1.0.0", docs_url=None,
               redoc_url=None, openapi_url=None)
 app.add_middleware(SessionMiddleware, secret_key=SESSION_SECRET,
-                   session_cookie="tripmate_session", same_site="strict",
+                   session_cookie="TravelMate_session", same_site="strict",
                    https_only=bool(os.getenv("VERCEL")), max_age=86400)
 app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
