@@ -53,29 +53,30 @@
             <div class="input-area">
                 <textarea
                     id="userInput"
+                    maxlength="2000"
                     placeholder="Plan a complete 7 days Japan trip including flights, hotels and sightseeing under 2 lakhs..."
                 ></textarea>
 
-                <button id="sendBtn" onclick="sendMessage()">
+                <button id="sendBtn">
                     <span id="btnText">Generate Plan</span>
                     <span id="btnLoader" class="loader hidden"></span>
                 </button>
             </div>
 
             <div class="quick-prompts">
-                <button onclick="setPrompt('Plan a complete 7 days Japan trip from Banglore including flights, hotels and sightseeing under 2 lakhs.')">
+                <button data-prompt="Plan a complete 7 days Japan trip from Banglore including flights, hotels and sightseeing under 2 lakhs.">
                     Japan Trip
                 </button>
 
-                <button onclick="setPrompt('Plan a 5 days Dubai trip from Dhaka with flights, hotels and sightseeing.')">
+                <button data-prompt="Plan a 5 days Dubai trip from Dhaka with flights, hotels and sightseeing.">
                     Dubai Trip
                 </button>
 
-                <button onclick="setPrompt('Plan a 7 days Thailand trip from Banglore with budget hotels and sightseeing.')">
+                <button data-prompt="Plan a 7 days Thailand trip from Banglore with budget hotels and sightseeing.">
                     Thailand Trip
                 </button>
 
-                <button onclick="setPrompt('Give me all country flight info.')">
+                <button data-prompt="Give me all country flight info.">
                     Global Flights
                 </button>
             </div>
@@ -91,11 +92,11 @@
                 </div>
 
                 <div class="result-actions">
-                    <button class="copy-btn" onclick="copyResult()">
+                    <button class="copy-btn">
                         Copy
                     </button>
 
-                    <button class="download-btn" onclick="downloadPDF()">
+                    <button class="download-btn">
                         Download PDF
                     </button>
                 </div>
@@ -116,11 +117,13 @@
         Built with FastAPI, LangGraph, Gemini, PostgreSQL, Tavily and AviationStack
     </footer>
 
+    <script src="/static/vendor/purify.min.js"></script>
+
     <!-- Markdown Renderer -->
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="/static/vendor/marked.umd.js"></script>
 
     <!-- PDF Download Library -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="/static/vendor/html2pdf.bundle.min.js"></script>
 
     <!-- Your Custom JS -->
     <script src="/static/script.js"></script>

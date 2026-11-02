@@ -1,5 +1,4 @@
 import os 
-import certifi
 from dotenv import load_dotenv
 from langchain_google_genai import ChatGoogleGenerativeAI
 
@@ -9,8 +8,6 @@ from typing import TypedDict, Annotated
 import operator
 import uuid
 
-import psycopg
-from psycopg.rows import dict_row
 
 from langgraph.graph import StateGraph, START, END
 from langgraph.checkpoint.postgres import PostgresSaver
@@ -25,10 +22,6 @@ from tools.flights import search_flights
 
 
 DATABASE_URL = os.getenv("DATABASE_URL")
-if not DATABASE_URL:
-    raise ValueError(
-        "DATABASE_URL is missing. Please add your Render PostgreSQL External Database URL to .env"
-    )
 
 
 
@@ -41,7 +34,10 @@ if not GEMINI_API_KEY:
 # LLM
 # =========================
 llm = ChatGoogleGenerativeAI(
-        model=os.getenv("GEMINI_MODEL"),
+        model=os.getenv("GEMINI_MODEL", "gemini-2.5-flash"),
+        timeout=60,
+        max_retries=1,
+        max_output_tokens=4096,
         api_key=GEMINI_API_KEY,
     )
 
@@ -197,17 +193,9 @@ graph.add_edge("final_agent", END)
 # PostgreSQL Checkpointer
 # =========================
 
-_conn = psycopg.connect(
-    DATABASE_URL,
-    autocommit=True,
-    row_factory=dict_row
-)
-
-checkpointer = PostgresSaver(_conn)
-checkpointer.setup()
-
-travel_graph = graph.compile(checkpointer=checkpointer)
-
+# Stateless deployments avoid persisting travel requests. A reachable PostgreSQL
+# database can be enabled explicitly for durable conversation checkpoints.
+travel_graph = graph.compile()
 
 
 # =========================
@@ -224,19 +212,20 @@ def run_travel_agent(user_input: str, thread_id: str | None = None):
         }
     }
 
-    result = travel_graph.invoke(
-        {
-            "messages": [
-                HumanMessage(content=user_input)
-            ],
-            "user_query": user_input,
-            "flight_results": "",
-            "hotel_results": "",
-            "itinerary": "",
-            "llm_calls": 0
-        },
-        config=config
-    )
+    initial_state = {
+        "messages": [HumanMessage(content=user_input)],
+        "user_query": user_input,
+        "flight_results": "",
+        "hotel_results": "",
+        "itinerary": "",
+        "llm_calls": 0,
+    }
+    if DATABASE_URL and os.getenv("TRAVEL_STATELESS") != "1":
+        with PostgresSaver.from_conn_string(DATABASE_URL) as checkpointer:
+            checkpointer.setup()
+            result = graph.compile(checkpointer=checkpointer).invoke(initial_state, config=config)
+    else:
+        result = travel_graph.invoke(initial_state, config=config)
 
     final_message = result["messages"][-1]
     final_answer = str(final_message.text)

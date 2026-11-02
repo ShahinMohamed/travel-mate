@@ -1,0 +1,14 @@
+airportsdata
+fastapi
+itsdangerous
+jinja2
+langchain-core
+langchain-google-genai
+langgraph
+langgraph-checkpoint-postgres
+psycopg[binary]
+pycountry
+python-dotenv
+requests
+tavily-python
+uvicorn

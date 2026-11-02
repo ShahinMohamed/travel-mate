@@ -10,7 +10,7 @@ tavily_client = TavilyClient(
 
 def format_response(response: dict)-> str:
     results = []
-    
+
     for i, r in enumerate(response["results"], 1):
         title   = r.get("title", "Unknown")
         url     = r.get("url", "")
@@ -25,8 +25,8 @@ def format_response(response: dict)-> str:
 
 
 def tavily_search(query):
-    response = tavily_client.search(
-        query= query,
-        max_results= 5
-    )
-    return format_response(response)    
+    try:
+        response = tavily_client.search(query=query, max_results=5, timeout=20)
+        return format_response(response)
+    except Exception:
+        return "Hotel search is temporarily unavailable."

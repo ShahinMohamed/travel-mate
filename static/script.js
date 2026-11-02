@@ -1,4 +1,6 @@
-let currentThreadId = localStorage.getItem("travel_thread_id") || null;
+let currentThreadId = null;
+// Discard legacy, caller-controlled conversation identifiers.
+localStorage.removeItem("travel_thread_id");
 let latestAnswerMarkdown = "";
 
 function setPrompt(text) {
@@ -42,8 +44,11 @@ function showResult(answer, threadId) {
     const resultBox = document.getElementById("resultBox");
     const threadInfo = document.getElementById("threadInfo");
 
-    if (typeof marked !== "undefined") {
-        resultBox.innerHTML = marked.parse(answer);
+    if (typeof marked !== "undefined" && typeof DOMPurify !== "undefined") {
+        resultBox.innerHTML = DOMPurify.sanitize(marked.parse(answer), {
+            ALLOWED_TAGS: ["p", "br", "strong", "em", "h1", "h2", "h3", "h4", "h5", "h6", "ul", "ol", "li", "table", "thead", "tbody", "tr", "th", "td", "blockquote", "code", "pre", "a", "hr", "del"],
+            ALLOWED_ATTR: ["href", "title"]
+        });
     } else {
         resultBox.innerText = answer;
     }
@@ -78,8 +83,7 @@ async function sendMessage() {
                 "Content-Type": "application/json"
             },
             body: JSON.stringify({
-                message: message,
-                thread_id: currentThreadId
+                message: message
             })
         });
 
@@ -90,7 +94,7 @@ async function sendMessage() {
         }
 
         currentThreadId = data.thread_id;
-        localStorage.setItem("travel_thread_id", currentThreadId);
+
 
         showResult(data.answer, data.thread_id);
 
@@ -180,4 +184,11 @@ document.addEventListener("keydown", function(event) {
     if (event.ctrlKey && event.key === "Enter") {
         sendMessage();
     }
+});
+
+document.getElementById("sendBtn").addEventListener("click", sendMessage);
+document.querySelector(".copy-btn").addEventListener("click", copyResult);
+document.querySelector(".download-btn").addEventListener("click", downloadPDF);
+document.querySelectorAll("[data-prompt]").forEach(button => {
+    button.addEventListener("click", () => setPrompt(button.dataset.prompt));
 });

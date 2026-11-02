@@ -1,6 +1,5 @@
 import os 
 import re 
-import certifi
 import airportsdata
 import pycountry
 import requests
@@ -17,7 +16,7 @@ API_KEY = os.getenv("AVIATIONSTACK_API_KEY")
 DEFAULT_ORIGIN_IATA = os.getenv("DEFAULT_ORIGIN_IATA", "COK")
 
 
-BASE_URL = os.getenv("AVIATIONSTACK_BASE_URL")
+BASE_URL = "https://api.aviationstack.com/v1/flights"
 
 
 AIRPORTS = airportsdata.load("IATA")
@@ -467,11 +466,7 @@ Arrival:
 
 def search_flights(query: str, limit: int = 10):
     if not API_KEY:
-        return (
-            "Flight API error: AVIATIONSTACK_API_KEY is missing.\n"
-            "Please add this in your .env file:\n"
-            "AVIATIONSTACK_API_KEY=your_api_key_here"
-        )
+        return "Live flight data is temporarily unavailable."
 
     dep_iata, arr_iata = parse_route(query)
 
@@ -487,20 +482,16 @@ def search_flights(query: str, limit: int = 10):
         params["arr_iata"] = arr_iata
 
     try:
-        response = requests.get(BASE_URL, params=params, timeout=30)
+        response = requests.get(BASE_URL, params=params, timeout=20, allow_redirects=False)
+        response.raise_for_status()
         data = response.json()
-    except requests.exceptions.RequestException as e:
-        return f"Flight API request failed: {e}"
+    except requests.exceptions.RequestException:
+        return "Live flight data is temporarily unavailable."
     except ValueError:
         return "Flight API returned invalid JSON."
 
     if "error" in data:
-        error = data["error"]
-        return (
-            "Flight API error:\n"
-            f"Code: {error.get('code', 'Unknown')}\n"
-            f"Message: {error.get('message', 'Unknown error')}"
-        )
+        return "Live flight data is temporarily unavailable."
 
     flight_data = data.get("data", [])
 
